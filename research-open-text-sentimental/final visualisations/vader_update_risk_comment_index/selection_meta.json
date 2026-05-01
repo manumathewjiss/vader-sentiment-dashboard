@@ -1,0 +1,20 @@
+{
+  "mode": "endpoint",
+  "minScore_url": "https://releasetrain.io/api/reddit/query/filter?minComments=3&minScore=0.5",
+  "maxScore_url": "https://releasetrain.io/api/reddit/query/filter?minComments=3&maxScore=0.5",
+  "lines_per_chart": 5,
+  "minScore_endpoint_reddit_ids": [
+    "1nw56v4",
+    "1of2cda",
+    "1rj06fw",
+    "1p9x65b",
+    "1sdnf0p"
+  ],
+  "maxScore_endpoint_reddit_ids": [
+    "1ppl4nv",
+    "1piwkia",
+    "1qrykct",
+    "1oetmbo",
+    "1pch8er"
+  ]
+}

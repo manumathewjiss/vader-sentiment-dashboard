@@ -99,3 +99,9 @@ temp/
 tmp/
 output/
 results/
+
+# Large Hugging Face / PyTorch checkpoints (regenerate with scripts/train_bert.py)
+tps_gds_classification/outputs/bert/
+
+# Large Hugging Face / PyTorch checkpoints (regenerate with scripts/train_bert.py)
+tps_gds_classification/outputs/bert/
