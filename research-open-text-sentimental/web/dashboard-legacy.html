@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparative VADER Sentiment Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 55%, #000 100%);
+            color: #fde68a;
+        }
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .hero {
+            background: linear-gradient(135deg, #111 0%, #1c1c1c 50%, #2b2b2b 100%);
+            color: #fde68a;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+            margin-bottom: 18px;
+            border: 2px solid #facc15;
+        }
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 1.9rem;
+            font-weight: 700;
+        }
+        .hero p {
+            margin: 0;
+            opacity: 0.95;
+        }
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(160px, 1fr));
+            gap: 10px;
+            background: #111;
+            border-radius: 12px;
+            padding: 12px;
+            border: 2px solid #facc15;
+            box-shadow: inset 0 0 0 1px #3a3a3a;
+            margin-bottom: 18px;
+        }
+        .field label {
+            display: block;
+            font-size: 0.8rem;
+            color: #facc15;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .field select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #facc15;
+            border-radius: 8px;
+            background: #1b1b1b;
+            color: #fef08a;
+        }
+        .section-title {
+            margin: 4px 0 10px;
+            font-size: 1.2rem;
+            color: #fde68a;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 14px;
+        }
+        .card {
+            background: #101010;
+            border: 2px solid #facc15;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.32), inset 0 0 0 1px #3a3a3a;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-head {
+            padding: 12px 14px;
+            background: #181818;
+            border-bottom: 1px solid #facc15;
+        }
+        .card-head h3 {
+            margin: 0 0 4px;
+            font-size: 1rem;
+            color: #fef08a;
+        }
+        .meta {
+            font-size: 0.78rem;
+            color: #facc15;
+            font-weight: 600;
+        }
+        .card-body {
+            padding: 12px;
+        }
+        .viz {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #facc15;
+            cursor: zoom-in;
+            background: #000;
+        }
+        .plotly-trajectory {
+            width: 100%;
+            min-height: 440px;
+            border-radius: 8px;
+            border: 1px solid #facc15;
+            background: #0a0a0a;
+            margin-top: 10px;
+        }
+        .card-body .viz + .plotly-trajectory {
+            margin-top: 14px;
+        }
+        .caption {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #fde68a;
+            line-height: 1.45;
+        }
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            margin-right: 6px;
+            margin-top: 4px;
+            background: #000;
+            color: #facc15;
+            border: 1px solid #facc15;
+            font-weight: 600;
+        }
+        .footer-note {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: #facc15;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.85);
+            z-index: 999;
+            padding: 18px;
+        }
+        .modal.open { display: block; }
+        .modal-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 2px solid #facc15;
+            border-radius: 12px;
+            padding: 10px;
+            background: #111;
+        }
+        .modal-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+        .modal-top h4 {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.35;
+            color: #fde68a;
+        }
+        .close-btn {
+            border: 1px solid #facc15;
+            background: transparent;
+            color: #facc15;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+        #modalImage {
+            width: 100%;
+            border-radius: 10px;
+            background: #000;
+            border: 1px solid #facc15;
+        }
+        @media (max-width: 900px) {
+            .toolbar { grid-template-columns: 1fr; }
+        }
+        .live-panel {
+            background: #0d0d0d;
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+        .live-panel h2 { margin-top: 0; color: #7dd3fc; }
+        .live-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 10px;
+        }
+        .live-toolbar .field label { color: #7dd3fc; }
+        .live-toolbar .field select {
+            border-color: #38bdf8;
+            color: #e0f2fe;
+        }
+        .live-status {
+            font-size: 0.85rem;
+            color: #bae6fd;
+            margin: 0 0 8px;
+            line-height: 1.4;
+        }
+        .live-meta {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin: 0 0 10px;
+        }
+        .btn-refresh {
+            border: 1px solid #38bdf8;
+            background: transparent;
+            color: #7dd3fc;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-refresh:hover { background: #1e293b; }
+        .trajectory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+            gap: 14px;
+            margin-top: 10px;
+        }
+        .trajectory-cell {
+            border: 1px solid #38bdf8;
+            border-radius: 10px;
+            background: #0a0a0a;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .trajectory-cell-head {
+            padding: 10px 12px 4px;
+            font-size: 0.8rem;
+            color: #bae6fd;
+            line-height: 1.35;
+            border-bottom: 1px solid #1e3a5f;
+        }
+        .trajectory-cell-head a {
+            color: #7dd3fc;
+            font-weight: 600;
+        }
+        .trajectory-source-strip {
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #dcfce7;
+            background: linear-gradient(90deg, #14532d 0%, #0f172a 100%);
+            border-top: 1px solid #166534;
+            border-bottom: 2px solid #4ade80;
+            padding: 8px 12px;
+            font-weight: 500;
+        }
+        .trajectory-cell .js-trajectory-plot {
+            min-height: 280px;
+            width: 100%;
+            flex: 1;
+        }
+        .live-chart-label {
+            font-size: 0.9rem;
+            color: #7dd3fc;
+            margin: 12px 0 6px;
+            font-weight: 600;
+        }
+        .live-panel-technical {
+            background: #0f0a12;
+            border: 2px solid #a855f7;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+        .live-panel-technical h2 { margin-top: 0; color: #e9d5ff; }
+        .live-panel-technical .live-status { color: #d8b4fe; }
+        .live-panel-technical .live-meta { color: #a78bfa; }
+        .live-panel-technical .live-toolbar .field label { color: #c4b5fd; }
+        .live-panel-technical .live-toolbar .field select { border-color: #a855f7; color: #f3e8ff; }
+        .live-panel-technical .btn-refresh {
+            border: 1px solid #a855f7;
+            color: #e9d5ff;
+        }
+        .live-panel-technical .live-chart-label { color: #d8b4fe; }
+        .live-panel-technical .trajectory-cell { border-color: #7c3aed; }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1>Comparative VADER Sentiment Dashboard</h1>
+            <p>
+                Interactive review of baseline and improved methods across
+                <strong>minScore=0.5</strong> and <strong>maxScore=0.5</strong> endpoint datasets.
+                The <strong>live multi-subreddit</strong> block below fetches fresh ReleaseTrain slices on each page load and runs VADER in the browser.
+            </p>
+        </header>
+
+        <section class="live-panel" id="liveSubredditPanel" aria-label="Live subreddit sentiment">
+            <h2 class="section-title">Live multi-subreddit VADER</h2>
+            <p class="live-status" id="liveSubredditStatus">Loading ReleaseTrain data and VADER…</p>
+            <p class="live-meta" id="liveSubredditMeta"></p>
+            <div class="live-toolbar">
+                <div class="field">
+                    <label for="liveSubredditFilter">Subreddit</label>
+                    <select id="liveSubredditFilter"></select>
+                </div>
+                <button type="button" class="btn-refresh" id="liveSubredditRefresh">Refresh (reload)</button>
+            </div>
+            <p class="live-chart-label">Comment-index trajectories: up to 5 top posts for the <strong>selected</strong> subreddit (comment count, then score).</p>
+            <div id="liveSubredditTrajectoryGrid" class="trajectory-grid" aria-label="Per-post trajectory charts"></div>
+            <p class="footer-note" style="margin-top:10px;color:#94a3b8">
+                Sources: three merged <code>filter</code> slices (up to 500 posts each): <strong>Pool</strong> (<code>minComments≥1</code>, no post-score filter), <strong>Class 1</strong> (<code>minScore=0.5</code> on post), <strong>Class 2</strong> (<code>maxScore=0.5</code>). Each post is tagged with the slice(s) it appeared in. Top <strong>5</strong> per target subreddit by <strong>comment count</strong> then <strong>score</strong>, preferring at least one Class 1 and one Class 2 when available.
+                <strong>One line chart per post</strong> (VADER compound vs chronological comment index). <strong>Click a point</strong> on any chart or the header link to open that Reddit thread.
+            </p>
+        </section>
+
+        <section class="live-panel-technical" id="technicalBalancePanel" aria-label="Meta subreddits balanced min max cohorts">
+            <h2 class="section-title">All meta subreddits — balanced min / max post scores</h2>
+            <p class="live-status" id="technicalBalanceStatus">Loading subreddit list and class slices…</p>
+            <p class="live-meta" id="technicalBalanceMeta"></p>
+            <div class="live-toolbar">
+                <div class="field">
+                    <label for="technicalBalanceFilter">Subreddit (from meta)</label>
+                    <select id="technicalBalanceFilter"></select>
+                </div>
+                <button type="button" class="btn-refresh" id="technicalBalanceRefresh">Refresh (reload)</button>
+            </div>
+            <p class="live-chart-label">Up to <strong>6</strong> charts: up to 3 from Class 1 (min post score ≥0.5) and 3 from Class 2 (max ≤0.5) per sub. If a cohort is missing, you get up to 5 from the available slice only, or a mixed 5 (e.g. 1+4). The dropdown is the <strong>full</strong> <code>releasetrain.io/api/reddit/meta/subreddits</code> list (case-insensitive, deduplicated, sorted). Many names may have no rows in the current min/max samples—use another or Refresh.</p>
+            <div id="technicalBalanceGrid" class="trajectory-grid" aria-label="Balanced min max trajectory charts"></div>
+            <p class="footer-note" style="margin-top:10px;color:#a78bfa">
+                Slices: <code>minComments=3&amp;minScore=0.5</code> vs <code>minComments=3&amp;maxScore=0.5</code> (500 rows each), filtered to the selected subreddit. Interactive Plotly: click a point to open the Reddit thread.
+            </p>
+        </section>
+
+        <section class="toolbar">
+            <div class="field">
+                <label for="endpointFilter">Endpoint Scope</label>
+                <select id="endpointFilter">
+                    <option value="all">All</option>
+                    <option value="min">minScore_0.5 only</option>
+                    <option value="max">maxScore_0.5 only</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="kindFilter">Visualization Type</label>
+                <select id="kindFilter">
+                    <option value="all">All</option>
+                    <option value="trend">Trend</option>
+                    <option value="label">Label Distribution</option>
+                    <option value="thread">Thread trajectory</option>
+                    <option value="comment_index">Comment-index trajectory</option>
+                    <option value="risk_professor">minScore vs maxScore cohort (professor)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="methodFilter">Method Scope</label>
+                <select id="methodFilter">
+                    <option value="all">All</option>
+                    <option value="baseline">Baseline Combined-Text Method</option>
+                    <option value="engagement">Per-Comment Aggregation (High-Engagement Sample)</option>
+                    <option value="random">Per-Comment Aggregation (Random Sample)</option>
+                    <option value="compare">Formal Comparative Plots (v1 vs v2)</option>
+                    <option value="thread_png">Thread trajectories (static PNG)</option>
+                    <option value="thread_plotly">Thread trajectories (interactive Plotly)</option>
+                    <option value="comment_index_raw">Comment-index (raw 2-line)</option>
+                    <option value="comment_index_cumulative">Comment-index (cumulative mean)</option>
+                    <option value="risk_professor">minScore vs maxScore (5-line panels)</option>
+                </select>
+            </div>
+        </section>
+
+        <h2 class="section-title">Visual Storyboard</h2>
+        <section class="grid" id="dashboardGrid"></section>
+
+        <p class="footer-note">
+            Tip: Click a <strong>static PNG</strong> to open it in a larger view. Interactive thread charts show Reddit post id, subreddit, and title when you hover a line.
+        </p>
+    </div>
+
+    <div class="modal" id="imageModal" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-top">
+                <h4 id="modalTitle"></h4>
+                <button class="close-btn" id="closeModal">Close</button>
+            </div>
+            <img id="modalImage" src="" alt="Visualization full view">
+        </div>
+    </div>
+
+    <script>
+        const visuals = [
+            {
+                title: "Baseline Combined-Text Method: Post-to-Post Sentiment Trend (Raw and Smoothed)",
+                endpoint: "both",
+                kind: "trend",
+                method: "baseline",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison/raw_smoothed_post_trend.png",
+                explain: "This is the original baseline where title, description, body, and all comments are merged into one text per post. It shows high volatility and stronger extremes because long comment threads can dominate the final sentiment score."
+            },
+            {
+                title: "Per-Comment Aggregation (Random Sample): Post-to-Post Sentiment Trend (Raw and Smoothed)",
+                endpoint: "both",
+                kind: "trend",
+                method: "random",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison_v2/random_n/raw_smoothed_post_trend.png",
+                explain: "This improved method scores each comment separately and then aggregates comment sentiment before combining with post text. The random sample acts as a sensitivity check to confirm patterns are not only from highly engaged posts."
+            },
+            {
+                title: "Per-Comment Aggregation (High-Engagement Sample): Post-to-Post Sentiment Trend (Raw and Smoothed)",
+                endpoint: "both",
+                kind: "trend",
+                method: "engagement",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison_v2/engagement_top_n/raw_smoothed_post_trend.png",
+                explain: "This improved method uses top-engagement posts while reducing long-thread bias through per-comment aggregation. It provides a cleaner trend for highly discussed posts in each endpoint."
+            },
+            {
+                title: "Formal Comparative Trend Analysis — minScore_0.5",
+                endpoint: "min",
+                kind: "trend",
+                method: "compare",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison_compare_v1_v2/minScore_0.5_trend_compare.png",
+                explain: "Compares three methods for minScore_0.5: baseline merged-text, improved high-engagement, and improved random. The key signal is how smoothing changes method-to-method and whether trend direction is consistent."
+            },
+            {
+                title: "Formal Comparative Label Distribution — minScore_0.5",
+                endpoint: "min",
+                kind: "label",
+                method: "compare",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison_compare_v1_v2/minScore_0.5_label_distribution_compare.png",
+                explain: "Shows Positive/Neutral/Negative percentages for each method on minScore_0.5. It highlights how the improved method introduces a more balanced neutral share compared to the baseline."
+            },
+            {
+                title: "Formal Comparative Trend Analysis — maxScore_0.5",
+                endpoint: "max",
+                kind: "trend",
+                method: "compare",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison_compare_v1_v2/maxScore_0.5_trend_compare.png",
+                explain: "Compares method behavior for maxScore_0.5. It helps confirm that the endpoint remains relatively more positive while the improved method reduces over-amplified sentiment spikes."
+            },
+            {
+                title: "Formal Comparative Label Distribution — maxScore_0.5",
+                endpoint: "max",
+                kind: "label",
+                method: "compare",
+                path: "../tps_gds_classification/outputs/vader_endpoint_comparison_compare_v1_v2/maxScore_0.5_label_distribution_compare.png",
+                explain: "Compares class percentages across methods for maxScore_0.5. It supports the conclusion that this endpoint tends to retain a stronger positive share."
+            },
+            {
+                title: "Author vs community sentiment over time (static PNG) — minScore_0.5",
+                endpoint: "min",
+                kind: "thread",
+                method: "thread_png",
+                path: "images/vader_author_community/minScore_0.5_author_community_trajectory.png",
+                plotlySlug: null,
+                explain: "Top 10 posts by comment volume: VADER compound vs hours since the submission. Each color is one post—solid lines are the OP (opening text + submitter comments), dashed lines are everyone else. Orange and blue bold curves are the mean across those ten threads. Same figure is committed under web/images for the dashboard."
+            },
+            {
+                title: "Author vs community sentiment over time (static PNG) — maxScore_0.5",
+                endpoint: "max",
+                kind: "thread",
+                method: "thread_png",
+                path: "images/vader_author_community/maxScore_0.5_author_community_trajectory.png",
+                plotlySlug: null,
+                explain: "Same design as the minScore chart, but for the maxScore=0.5 endpoint (typically lower-scoring posts). Use it next to the interactive version to compare how community vs author sentiment evolves in that slice."
+            },
+            {
+                title: "Author vs community sentiment over time (interactive) — minScore_0.5",
+                endpoint: "min",
+                kind: "thread",
+                method: "thread_plotly",
+                path: null,
+                plotlySlug: "minScore_0.5",
+                explain: "Hover any trace to see rank, reddit post id, subreddit, truncated title, elapsed hours, and VADER compound. Per-post colors match the static export; means appear as thicker orange (author) and blue (community) lines."
+            },
+            {
+                title: "Author vs community sentiment over time (interactive) — maxScore_0.5",
+                endpoint: "max",
+                kind: "thread",
+                method: "thread_plotly",
+                path: null,
+                plotlySlug: "maxScore_0.5",
+                explain: "Interactive twin of the maxScore static trajectory. Useful for presentations—pan/zoom with the mode bar and inspect which thread each line belongs to."
+            }
+        ];
+
+        // Add 20 comment-index trajectories (10 raw + 10 cumulative).
+        const commentIndexPosts = {
+            min: ["1nw56v4", "1of2cda", "1rj06fw", "1p9x65b", "1sdnf0p"],
+            max: ["1ppl4nv", "1piwkia", "1qrykct", "1oetmbo", "1pch8er"]
+        };
+
+        ["min", "max"].forEach((endpointKey) => {
+            const slug = endpointKey === "min" ? "minScore_0.5" : "maxScore_0.5";
+            commentIndexPosts[endpointKey].forEach((postId, idx) => {
+                const rank = String(idx + 1).padStart(2, "0");
+                visuals.push({
+                    title: `Comment-index trajectory (raw) — ${slug} — post #${idx + 1} (${postId})`,
+                    endpoint: endpointKey,
+                    kind: "comment_index",
+                    method: "comment_index_raw",
+                    path: `images/vader_comment_index_trajectories/raw/${slug}/post_${rank}_${postId}_by_comment_index.png`,
+                    plotlySlug: null,
+                    explain: "Raw per-event trajectory with exactly two lines: orange = author stream (opening post + OP comments), blue dashed = community stream. X-axis is chronological comment number."
+                });
+                visuals.push({
+                    title: `Comment-index trajectory (cumulative mean) — ${slug} — post #${idx + 1} (${postId})`,
+                    endpoint: endpointKey,
+                    kind: "comment_index",
+                    method: "comment_index_cumulative",
+                    path: `images/vader_comment_index_trajectories/cumulative/${slug}/post_${rank}_${postId}_by_comment_index.png`,
+                    plotlySlug: null,
+                    explain: "Cumulative mean trajectory with two lines over comment index: orange = author-side mean, blue = community mean."
+                });
+            });
+        });
+
+        visuals.push(
+            {
+                title: "Professor view — minScore=0.5 cohort (VADER per comment, max 5 lines)",
+                endpoint: "both",
+                kind: "risk_professor",
+                method: "risk_professor",
+                path: "images/vader_update_risk/update_risk_top5_by_comment_index.png",
+                plotlySlug: null,
+                explain: "X-axis: 1 = first comment in time, 2 = second, etc. Y-axis: VADER compound for that comment only (opening post body excluded). Lines: top 5 by engagement among posts returned by the ReleaseTrain filter with minComments=3 and minScore=0.5 (higher-score / update-risk cohort). Reddit ids and URL: web/data/vader_update_risk_comment_index_selection.json."
+            },
+            {
+                title: "Professor view — maxScore=0.5 cohort (VADER per comment, max 5 lines)",
+                endpoint: "both",
+                kind: "risk_professor",
+                method: "risk_professor",
+                path: "images/vader_update_risk/non_update_risk_top5_by_comment_index.png",
+                plotlySlug: null,
+                explain: "Same layout as the minScore panel, but threads are drawn only from the ReleaseTrain filter with minComments=3 and maxScore=0.5 (lower-score / without-risks cohort). Each line is one thread; color distinguishes posts."
+            }
+        );
+
+        const endpointFilter = document.getElementById("endpointFilter");
+        const kindFilter = document.getElementById("kindFilter");
+        const methodFilter = document.getElementById("methodFilter");
+        const grid = document.getElementById("dashboardGrid");
+
+        const modal = document.getElementById("imageModal");
+        const modalImage = document.getElementById("modalImage");
+        const modalTitle = document.getElementById("modalTitle");
+        const closeModal = document.getElementById("closeModal");
+
+        function tag(text) {
+            return `<span class="badge">${text}</span>`;
+        }
+
+        function methodLabel(m) {
+            if (m === "baseline") return "Baseline";
+            if (m === "engagement") return "V2 High-Engagement";
+            if (m === "random") return "V2 Random";
+            if (m === "compare") return "v1 vs v2 Comparison";
+            if (m === "thread_png") return "Thread (PNG)";
+            if (m === "thread_plotly") return "Thread (interactive)";
+            if (m === "comment_index_raw") return "Comment-index raw";
+            if (m === "comment_index_cumulative") return "Comment-index cumulative";
+            if (m === "risk_professor") return "minScore vs maxScore (professor)";
+            return m;
+        }
+
+        function kindLabel(kind) {
+            if (kind === "trend") return "Trend";
+            if (kind === "label") return "Label Distribution";
+            if (kind === "thread") return "Thread trajectory";
+            if (kind === "comment_index") return "Comment-index trajectory";
+            if (kind === "risk_professor") return "minScore vs maxScore cohort (professor)";
+            return kind;
+        }
+
+        function endpointLabel(v) {
+            if (v === "min") return "minScore_0.5";
+            if (v === "max") return "maxScore_0.5";
+            return "Both endpoints";
+        }
+
+        let trajectoryDataCache = null;
+
+        async function loadTrajectoryData() {
+            if (trajectoryDataCache) return trajectoryDataCache;
+            const res = await fetch("data/vader_thread_trajectories.json");
+            if (!res.ok) throw new Error("trajectory json " + res.status);
+            trajectoryDataCache = await res.json();
+            return trajectoryDataCache;
+        }
+
+        function buildTrajectoryFigure(slug, ep) {
+            const traces = [];
+            const titleShort = (t) => (t.length > 100 ? t.slice(0, 100) + "…" : t);
+            (ep.traces || []).forEach((t) => {
+                const n = t.hours.length;
+                const cd = [];
+                for (let i = 0; i < n; i++) {
+                    cd.push([t.rank, t.redditId, t.subreddit, titleShort(t.title || ""), t.stream]);
+                }
+                const label = t.stream === "author" ? `#${t.rank} author` : `#${t.rank} community`;
+                traces.push({
+                    type: "scatter",
+                    mode: "lines+markers",
+                    name: label,
+                    x: t.hours,
+                    y: t.compound,
+                    showlegend: false,
+                    line: {
+                        color: t.color,
+                        width: 2.6,
+                        dash: t.stream === "community" ? "dash" : "solid"
+                    },
+                    marker: { size: t.stream === "author" ? 5 : 4, color: t.color },
+                    customdata: cd,
+                    hovertemplate:
+                        "<b>%{customdata[4]}</b> · %{customdata[0]} · id %{customdata[1]}<br>r/%{customdata[2]}<br>%{customdata[3]}<br>hours: %{x:.2f}<br>VADER: %{y:.3f}<extra></extra>"
+                });
+            });
+            traces.push({
+                type: "scatter",
+                mode: "lines",
+                name: "Mean — author (10 posts)",
+                x: ep.grid_hours,
+                y: ep.mean_author,
+                showlegend: true,
+                line: { color: "#c05621", width: 4 },
+                hovertemplate: "<b>Mean author</b><br>hours: %{x:.2f}<br>VADER: %{y:.3f}<extra></extra>"
+            });
+            traces.push({
+                type: "scatter",
+                mode: "lines",
+                name: "Mean — community",
+                x: ep.grid_hours,
+                y: ep.mean_community,
+                showlegend: true,
+                line: { color: "#2c5282", width: 4 },
+                hovertemplate: "<b>Mean community</b><br>hours: %{x:.2f}<br>VADER: %{y:.3f}<extra></extra>"
+            });
+
+            const xMax = ep.max_hours != null ? ep.max_hours : 1;
+            const layout = {
+                autosize: true,
+                paper_bgcolor: "#0a0a0a",
+                plot_bgcolor: "#101010",
+                font: { color: "#fde68a", size: 11 },
+                margin: { t: 36, r: 24, b: 52, l: 56 },
+                title: {
+                    text: slug.replace(/_/g, " ") + " — hover lines for post details",
+                    font: { size: 13, color: "#fef08a" }
+                },
+                xaxis: {
+                    title: "Hours since post creation",
+                    gridcolor: "#333",
+                    zeroline: false,
+                    range: [0, xMax * 1.02]
+                },
+                yaxis: {
+                    title: "VADER compound",
+                    gridcolor: "#333",
+                    zeroline: false,
+                    range: [-1, 1]
+                },
+                legend: {
+                    orientation: "h",
+                    yanchor: "bottom",
+                    y: 1.02,
+                    xanchor: "right",
+                    x: 1,
+                    font: { size: 10, color: "#fde68a" }
+                },
+                shapes: [
+                    { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, yref: "y", line: { color: "#666", width: 1, dash: "dash" } },
+                    { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0.05, y1: 0.05, yref: "y", line: { color: "#2f855a", width: 1, dash: "dot" } },
+                    { type: "line", xref: "paper", x0: 0, x1: 1, y0: -0.05, y1: -0.05, yref: "y", line: { color: "#c53030", width: 1, dash: "dot" } }
+                ]
+            };
+            return { traces, layout };
+        }
+
+        async function mountTrajectoryPlots() {
+            const nodes = document.querySelectorAll(".plotly-trajectory[data-slug]");
+            if (!nodes.length) return;
+            try {
+                const data = await loadTrajectoryData();
+                nodes.forEach((el) => {
+                    const slug = el.dataset.slug;
+                    const ep = data[slug];
+                    if (!slug || !ep || typeof Plotly === "undefined") return;
+                    const { traces, layout } = buildTrajectoryFigure(slug, ep);
+                    Plotly.purge(el);
+                    Plotly.newPlot(el, traces, layout, {
+                        responsive: true,
+                        displayModeBar: true,
+                        displaylogo: false,
+                        modeBarButtonsToRemove: ["lasso2d", "select2d"]
+                    });
+                });
+            } catch (err) {
+                console.error(err);
+                nodes.forEach((el) => {
+                    el.innerHTML = "<p style='color:#f87171;padding:12px'>Could not load interactive data (vader_thread_trajectories.json).</p>";
+                });
+            }
+        }
+
+        function render() {
+            const e = endpointFilter.value;
+            const k = kindFilter.value;
+            const m = methodFilter.value;
+
+            const filtered = visuals.filter((v) => {
+                const endpointOk = e === "all" || v.endpoint === "both" || v.endpoint === e;
+                const kindOk = k === "all" || v.kind === k;
+                const methodOk = m === "all" || v.method === m;
+                return endpointOk && kindOk && methodOk;
+            });
+
+            if (!filtered.length) {
+                grid.innerHTML = "<p>No visualization matches the current filter. Try changing the filter options.</p>";
+                return;
+            }
+
+            grid.innerHTML = filtered.map((v) => {
+                const imgHtml = v.path
+                    ? `<img class="viz" src="${v.path}" alt="${v.title}" data-title="${v.title}" data-path="${v.path}">`
+                    : "";
+                const plotId = v.plotlySlug ? "plotly-" + v.plotlySlug.replace(/[^a-zA-Z0-9_-]/g, "_") : "";
+                const plotHtml = v.plotlySlug
+                    ? `<div class="plotly-trajectory" id="${plotId}" data-slug="${v.plotlySlug}"></div>`
+                    : "";
+                return `
+                <article class="card">
+                    <div class="card-head">
+                        <h3>${v.title}</h3>
+                        <div class="meta">
+                            ${tag(endpointLabel(v.endpoint))}
+                            ${tag(kindLabel(v.kind))}
+                            ${tag(methodLabel(v.method))}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        ${imgHtml}
+                        ${plotHtml}
+                        <p class="caption">${v.explain}</p>
+                    </div>
+                </article>
+            `;
+            }).join("");
+
+            document.querySelectorAll(".viz").forEach((img) => {
+                img.addEventListener("click", () => {
+                    modalTitle.textContent = img.dataset.title;
+                    modalImage.src = img.dataset.path;
+                    modal.classList.add("open");
+                    modal.setAttribute("aria-hidden", "false");
+                });
+            });
+
+            void mountTrajectoryPlots();
+        }
+
+        endpointFilter.addEventListener("change", render);
+        kindFilter.addEventListener("change", render);
+        methodFilter.addEventListener("change", render);
+        closeModal.addEventListener("click", () => {
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+            modalImage.src = "";
+        });
+        modal.addEventListener("click", (evt) => {
+            if (evt.target === modal) {
+                modal.classList.remove("open");
+                modal.setAttribute("aria-hidden", "true");
+                modalImage.src = "";
+            }
+        });
+
+        render();
+    </script>
+    <script type="module" src="js/live-subreddit.js"></script>
+    <script type="module" src="js/technical-balance.mjs"></script>
+</body>
+</html>

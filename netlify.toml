@@ -1,0 +1,23 @@
+[build]
+  publish = "."
+
+# Send the site root to the research showcase (redirect, not rewrite,
+# so the page's relative asset paths resolve correctly).
+[[redirects]]
+  from = "/"
+  to = "/research-open-text-sentimental/web/"
+  status = 302
+  force = true
+
+# Same-origin proxy so dashboards can call ReleaseTrain without browser CORS issues.
+[[redirects]]
+  from = "/releasetrain-api/*"
+  to = "https://releasetrain.io/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/research-open-text-sentimental/releasetrain-api/*"
+  to = "https://releasetrain.io/api/:splat"
+  status = 200
+  force = true
